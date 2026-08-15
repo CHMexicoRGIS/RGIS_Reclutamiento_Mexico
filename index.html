@@ -778,15 +778,35 @@ renderCityResult(cities[0]);
 
 /* ---------- form submit ---------- */
 const applyForm = document.getElementById('applyForm');
+const APPLY_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxyXmtyRNp_eTP1kRwMFvH5E38554qip20GRDGx2jUMIbluM8N0srNq--EXX1GFbMwE/exec';
 let formStarted = false;
 applyForm.addEventListener('input', () => {
   if(!formStarted){ formStarted = true; trackEvent('form_start'); }
 });
 applyForm.addEventListener('submit', function(e){
   e.preventDefault();
-  trackEvent('form_submit', {vacante: 'contador'});
-  applyForm.style.display = 'none';
-  document.getElementById('confirmMsg').classList.add('show');
+  const submitBtn = applyForm.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Enviando...';
+
+  const formData = new FormData(applyForm);
+
+  fetch(APPLY_ENDPOINT, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: formData
+  })
+  .then(() => {
+    trackEvent('form_submit', {vacante: 'contador'});
+    applyForm.style.display = 'none';
+    document.getElementById('confirmMsg').classList.add('show');
+  })
+  .catch(() => {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+    alert('No pudimos enviar tu postulación. Por favor intenta de nuevo o verifica tu conexión.');
+  });
 });
 
 /* ---------- sticky CTA visibility ---------- */
